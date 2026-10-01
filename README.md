@@ -39,6 +39,11 @@ In production, rigid or naive automated policies fail silently:
 4. **Enforces deliberate human approval** prior to production deployment.
 5. **Monitors live reliability and escalation metrics** in real time.
 
+<div align="center">
+  <img src="assets/images/devyra_adversarial_engine.jpg" alt="Devyra Adversarial Stress-Testing Engine" width="90%" style="border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); margin-top: 14px; box-shadow: 0 12px 30px rgba(0,0,0,0.5);" />
+  <p><em>Figure 1: Devyra Adversarial Stress-Testing Architecture with Defensive Verification Shields and Forensic Audit Matrix.</em></p>
+</div>
+
 ---
 
 ### 3. Golden Workflow
@@ -46,6 +51,33 @@ In production, rigid or naive automated policies fail silently:
 ```text
 Connect → Discover → Test → Attack → Fix → Simulate → Approve → Deploy → Monitor
 ```
+
+```mermaid
+flowchart LR
+    A["1. Connect<br/>(Policy V1 Spec)"] --> B["2. Discover<br/>(Edge Distributions)"]
+    B --> C["3. Test<br/>(Benchmark Suite)"]
+    C --> D["4. Attack<br/>(Splitting, Velocity, Syndicate)"]
+    D --> E["5. Fix<br/>(Policy V2 Synthesis)"]
+    E --> F["6. Simulate<br/>(10,000 Historical Replay)"]
+    F --> G["7. Approve<br/>(Human Sign-off)"]
+    G --> H["8. Deploy<br/>(Active Release)"]
+    H --> I["9. Monitor<br/>(Live Telemetry & Triage)"]
+
+    style A fill:#101426,stroke:#7de7ff,stroke-width:1px,color:#fff
+    style B fill:#101426,stroke:#8ab4ff,stroke-width:1px,color:#fff
+    style C fill:#101426,stroke:#8ab4ff,stroke-width:1px,color:#fff
+    style D fill:#261014,stroke:#ff7979,stroke-width:1px,color:#fff
+    style E fill:#101426,stroke:#7de7ff,stroke-width:1px,color:#fff
+    style F fill:#101426,stroke:#8ab4ff,stroke-width:1px,color:#fff
+    style G fill:#1d1830,stroke:#9b8cff,stroke-width:1px,color:#fff
+    style H fill:#0f2520,stroke:#50fa7b,stroke-width:1px,color:#fff
+    style I fill:#101426,stroke:#7de7ff,stroke-width:1px,color:#fff
+```
+
+<div align="center">
+  <img src="assets/images/devyra_flow_architecture.jpg" alt="Devyra End-to-End Reliability Workflow Pipeline" width="90%" style="border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); margin-top: 16px; box-shadow: 0 12px 30px rgba(0,0,0,0.5);" />
+  <p><em>Figure 2: Complete End-to-End Decision Reliability Pipeline (Connect → Discover → Test → Attack → Fix → Simulate → Approve → Deploy → Monitor).</em></p>
+</div>
 
 * **Connect:** Ingest decision policies, parameters, and boundary conditions.
 * **Discover:** Map edge-case distributions and systemic exposure vulnerabilities.
