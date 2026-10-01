@@ -17,8 +17,3 @@ ENV/
 # OS generated files
 .DS_Store
 Thumbs.db
-
-# Editor & IDE
-.kilo/
-.kilocode/
-
