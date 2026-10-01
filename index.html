@@ -1,0 +1,3021 @@
+<!DOCTYPE html>
+<html lang="en" class="intro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Devyra — Test every critical decision</title>
+  <meta name="description" content="Devyra is an AI decision reliability platform that stress-tests automated business decisions before they reach production.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cpolygon points='12,2 21,7.5 21,16.5 12,22 3,16.5 3,7.5' stroke='%23ffffff' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cpolygon points='12,6.5 17,9.5 17,14.5 12,17.5 7,14.5 7,9.5' fill='%238ab4ff' fill-opacity='0.4' stroke='%238ab4ff' stroke-width='1.2'/%3E%3Ccircle cx='12' cy='12' r='2.2' fill='%23ffffff'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;450;500;545;550;600;700&display=block" rel="stylesheet">
+  <style>
+    @font-face{
+      font-family:"InterVar";
+      font-style:normal;
+      font-weight:100 900;
+      font-display:block;
+      src:url(assets/fonts/inter-var.woff2) format("woff2");
+    }
+
+    :root{
+      --u: max( min(calc(100vw / 1563), calc(100vh / 460)), 0.80px );
+
+      --ink:#ffffff;
+      --ink-mark:rgba(255,255,255,.98);
+      --ink-nav:rgba(255,255,255,.91);
+      --ink-sub:rgba(255,255,255,.50);
+      --ink-pill:rgba(255,255,255,.88);
+      --ink-dark:#000000;
+
+      --hairline:rgba(255,255,255,.98);
+      --glass-bg:rgba(255,255,255,.12);
+      --glass-line:rgba(255,255,255,.15);
+
+      --devyra-blue:#8ab4ff;
+      --devyra-violet:#9b8cff;
+      --devyra-cyan:#7de7ff;
+
+      --r-btn:calc(10 * var(--u));
+
+      --e-reveal:cubic-bezier(.18,.85,.26,1);
+      --e-soft:cubic-bezier(.22,1,.36,1);
+      --e-nav:cubic-bezier(.33,1,.68,1);
+
+      --rise:calc(10 * var(--u));
+      --rise-lg:calc(13 * var(--u));
+    }
+
+    @supports (height:100dvh){
+      :root{
+        --u:max(
+          min(calc(100vw / 1563),calc(100dvh / 460)),
+          0.80px
+        );
+      }
+    }
+
+    @supports not (width:max(1px,1vw)){
+      :root{
+        --u:calc(100vw / 1563);
+      }
+    }
+
+    *,*::before,*::after{
+      box-sizing:border-box;
+    }
+
+    html,body{
+      height:100%;
+    }
+
+    body{
+      margin:0;
+      background:#000;
+      color:#fff;
+      overflow:hidden;
+      font-optical-sizing:none;
+      font-feature-settings:"kern" 1,"calt" 1;
+      -webkit-font-smoothing:antialiased;
+      text-rendering:geometricPrecision;
+      font-family:"InterVar","Inter","Helvetica Neue",Arial,system-ui,sans-serif;
+    }
+
+    .frame{
+      position:fixed;
+      inset:0;
+      overflow:hidden;
+      background:#000;
+      isolation:isolate;
+    }
+
+    .sky{
+      position:absolute;
+      top:calc(-1.5 * var(--u));
+      left:50%;
+      transform:translateX(-50%);
+      width:100%;
+      height:auto;
+      min-height:calc(100% + 1.5 * var(--u));
+      object-fit:cover;
+      object-position:center top;
+      z-index:0;
+      pointer-events:none;
+      user-select:none;
+    }
+
+    .infra-canvas{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      z-index:1;
+      pointer-events:none;
+    }
+
+    .veil{
+      position:absolute;
+      inset:0;
+      background:
+        radial-gradient(ellipse 90% 48% at 50% 0%, rgba(0,0,0,.92) 0%, rgba(0,0,0,.76) 50%, rgba(0,0,0,.35) 100%),
+        linear-gradient(to bottom, rgba(0,0,0,.85) 0%, rgba(0,0,0,.25) 45%, rgba(0,0,0,.08) 100%);
+      z-index:1;
+      pointer-events:none;
+    }
+
+    .cursor-glow{
+      position:fixed;
+      width:220px;
+      height:220px;
+      border-radius:50%;
+      pointer-events:none;
+      background:
+        radial-gradient(
+          circle,
+          rgba(120,170,255,.07),
+          transparent 68%
+        );
+      transform:translate(-50%,-50%);
+      z-index:2;
+      mix-blend-mode:screen;
+      opacity:0;
+      transition:opacity .4s ease;
+    }
+
+    /* HEADER */
+    .bar{
+      position:absolute;
+      left:calc(50% - 495.5 * var(--u));
+      top:calc(7.5 * var(--u));
+      width:calc(983.5 * var(--u));
+      height:calc(36.2 * var(--u));
+      z-index:3;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+    }
+
+    .brand{
+      display:inline-flex;
+      align-items:center;
+      gap:calc(9 * var(--u));
+      text-decoration:none;
+      color:var(--ink-mark);
+      cursor:pointer;
+      user-select:none;
+    }
+
+    .brand-mark{
+      width:calc(22 * var(--u));
+      height:calc(22 * var(--u));
+      display:block;
+      flex-shrink:0;
+    }
+
+    .brand-text{
+      font-size:calc(17.5 * var(--u));
+      font-weight:550;
+      font-variation-settings:'opsz' 22;
+      letter-spacing:0;
+      color:#fff;
+      line-height:1;
+    }
+
+    .links{
+      display:flex;
+      align-items:center;
+      gap:calc(28 * var(--u));
+    }
+
+    .nav-link{
+      font-size:calc(13.6 * var(--u));
+      font-weight:450;
+      color:var(--ink-nav);
+      opacity:.85;
+      text-decoration:none;
+      position:relative;
+      transition:color .18s ease, opacity .18s ease;
+    }
+
+    .nav-link:hover{
+      color:#ffffff;
+      opacity:1;
+    }
+
+    .actions{
+      display:flex;
+      align-items:center;
+      gap:calc(10 * var(--u));
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      height:calc(34 * var(--u));
+      padding:0 calc(16 * var(--u));
+      border-radius:var(--r-btn);
+      font-size:calc(13.2 * var(--u));
+      font-weight:500;
+      text-decoration:none;
+      cursor:pointer;
+      white-space:nowrap;
+      border:1px solid transparent;
+      transition:
+        background-color .18s ease,
+        color .18s ease,
+        border-color .18s ease,
+        transform .18s cubic-bezier(.22,1,.36,1),
+        box-shadow .18s ease;
+    }
+
+    .btn:hover{
+      transform:translateY(calc(-1 * var(--u)));
+    }
+
+    .btn:active{
+      transform:translateY(0) scale(.985);
+    }
+
+    .btn.ghost{
+      background:transparent;
+      color:#ffffff;
+      border-color:rgba(255,255,255,.24);
+      backdrop-filter:blur(8px);
+      -webkit-backdrop-filter:blur(8px);
+    }
+
+    .btn.ghost:hover{
+      background:rgba(255,255,255,.07);
+      border-color:rgba(255,255,255,.55);
+    }
+
+    .btn.solid{
+      background:#ffffff;
+      color:#000000;
+      border-color:#ffffff;
+      box-shadow:0 0 calc(18 * var(--u)) rgba(255,255,255,.14);
+    }
+
+    .btn.solid:hover{
+      box-shadow:0 calc(2 * var(--u)) calc(22 * var(--u)) rgba(255,255,255,.32);
+    }
+
+    .menu{
+      display:none;
+      align-items:center;
+      justify-content:center;
+      width:calc(36 * var(--u));
+      height:calc(36 * var(--u));
+      border-radius:var(--r-btn);
+      background:rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.18);
+      color:#fff;
+      cursor:pointer;
+      padding:0;
+      backdrop-filter:blur(10px);
+      -webkit-backdrop-filter:blur(10px);
+      transition:background-color .18s ease, border-color .18s ease;
+    }
+
+    .menu:hover{
+      background:rgba(255,255,255,.16);
+      border-color:rgba(255,255,255,.32);
+    }
+
+    .menu-icon{
+      width:calc(18 * var(--u));
+      height:calc(18 * var(--u));
+      display:block;
+    }
+
+    .menu-line{
+      transform-origin:center;
+      transition:transform .2s ease, opacity .2s ease;
+    }
+
+    .bar[data-open="true"] .menu-line.top{
+      transform:translateY(4px) rotate(45deg);
+    }
+
+    .bar[data-open="true"] .menu-line.mid{
+      opacity:0;
+    }
+
+    .bar[data-open="true"] .menu-line.bot{
+      transform:translateY(-4px) rotate(-45deg);
+    }
+
+    /* MOBILE SHEET */
+    .sheet{
+      position:absolute;
+      top:calc(100% + 10 * var(--u));
+      right:0;
+      width:calc(260 * var(--u));
+      max-width:calc(100vw - 32px);
+      background:rgba(12,14,20,.90);
+      border:1px solid rgba(255,255,255,.15);
+      backdrop-filter:blur(18px) saturate(140%);
+      -webkit-backdrop-filter:blur(18px) saturate(140%);
+      box-shadow:0 calc(18 * var(--u)) calc(44 * var(--u)) rgba(0,0,0,.55);
+      border-radius:calc(14 * var(--u));
+      padding:calc(18 * var(--u));
+      display:flex;
+      flex-direction:column;
+      gap:calc(14 * var(--u));
+      opacity:0;
+      transform:translateY(calc(-8 * var(--u))) scale(0.96);
+      pointer-events:none;
+      transition:opacity .2s cubic-bezier(.22,1,.36,1), transform .2s cubic-bezier(.22,1,.36,1);
+      z-index:10;
+    }
+
+    .bar[data-open="true"] .sheet{
+      opacity:1;
+      transform:none;
+      pointer-events:auto;
+    }
+
+    .sheet-links{
+      display:flex;
+      flex-direction:column;
+      gap:calc(10 * var(--u));
+    }
+
+    .sheet-link{
+      font-size:calc(14 * var(--u));
+      font-weight:450;
+      color:rgba(255,255,255,.86);
+      text-decoration:none;
+      padding:calc(6 * var(--u)) 0;
+      transition:color .18s ease;
+    }
+
+    .sheet-link:hover{
+      color:#fff;
+    }
+
+    .sheet-actions{
+      display:flex;
+      flex-direction:column;
+      gap:calc(8 * var(--u));
+      padding-top:calc(10 * var(--u));
+      border-top:1px solid rgba(255,255,255,.10);
+    }
+
+    .sheet-actions .btn{
+      width:100%;
+      height:calc(36 * var(--u));
+    }
+
+    /* SCREEN & HERO */
+    .screen{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:2;
+      pointer-events:none;
+    }
+
+    .hero{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      text-align:center;
+      width:100%;
+      max-width:calc(1080 * var(--u));
+      padding:0 calc(20 * var(--u));
+      margin-top:calc(-34 * var(--u));
+      pointer-events:auto;
+    }
+
+    /* EYEBROW PILL */
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:calc(8 * var(--u));
+      padding:calc(4.5 * var(--u)) calc(12 * var(--u)) calc(4.5 * var(--u)) calc(5 * var(--u));
+      border-radius:calc(999 * var(--u));
+      background:rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.15);
+      backdrop-filter:blur(10px);
+      -webkit-backdrop-filter:blur(10px);
+      color:var(--ink-pill);
+      text-decoration:none;
+      font-size:calc(12 * var(--u));
+      font-weight:480;
+      position:relative;
+      overflow:hidden;
+      user-select:none;
+      cursor:pointer;
+      transition:
+        background-color .22s ease,
+        border-color .22s ease,
+        transform .22s cubic-bezier(.22,1,.36,1);
+    }
+
+    .pill::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent);
+      transform:translateX(-100%);
+      transition:transform .6s ease;
+    }
+
+    .pill:hover{
+      transform:translateY(calc(-1 * var(--u)));
+      background:rgba(255,255,255,.14);
+      border-color:rgba(255,255,255,.28);
+    }
+
+    .pill:hover::before{
+      transform:translateX(100%);
+    }
+
+    .pill-badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      background:rgba(255,255,255,.18);
+      color:#ffffff;
+      padding:calc(1.5 * var(--u)) calc(6.5 * var(--u));
+      border-radius:calc(999 * var(--u));
+      font-size:calc(9.5 * var(--u));
+      font-weight:600;
+      letter-spacing:calc(0.4 * var(--u));
+      text-transform:uppercase;
+    }
+
+    .pill-text{
+      letter-spacing:calc(-0.02 * var(--u));
+    }
+
+    .pill-arrow{
+      font-size:calc(11 * var(--u));
+      opacity:.75;
+      transition:transform .18s ease;
+    }
+
+    .pill:hover .pill-arrow{
+      transform:translateX(calc(2 * var(--u)));
+      opacity:1;
+    }
+
+    /* HEADLINE */
+    .headline{
+      margin:calc(15 * var(--u)) 0 calc(15 * var(--u));
+      font-size:calc(55 * var(--u));
+      font-weight:545;
+      font-variation-settings:'opsz' 32;
+      line-height:calc(56 * var(--u));
+      letter-spacing:calc(-0.76 * var(--u));
+      color:var(--ink);
+      text-align:center;
+    }
+
+    .ln{
+      display:block;
+      overflow:hidden;
+      padding-bottom:calc(7 * var(--u));
+      margin-bottom:calc(-7 * var(--u));
+    }
+
+    .ln-i{
+      display:block;
+    }
+
+    /* SUBHEADLINE */
+    .sub{
+      margin:0 auto calc(26 * var(--u));
+      max-width:calc(640 * var(--u));
+      font-size:calc(15.7 * var(--u));
+      font-weight:400;
+      line-height:calc(24 * var(--u));
+      letter-spacing:calc(-0.05 * var(--u));
+      color:rgba(255,255,255,.50);
+      text-align:center;
+    }
+
+    /* CTA BUTTONS */
+    .ctas{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:calc(12 * var(--u));
+    }
+
+    .ctas .btn{
+      height:calc(38 * var(--u));
+      padding:0 calc(20 * var(--u));
+      font-size:calc(13.8 * var(--u));
+    }
+
+    .ctas .btn.solid{
+      box-shadow:0 0 calc(22 * var(--u)) rgba(255,255,255,.16);
+    }
+
+    .ctas .btn.solid:hover{
+      box-shadow:0 calc(3 * var(--u)) calc(28 * var(--u)) rgba(255,255,255,.36);
+    }
+
+    /* ABSTRACT DECISION INFRASTRUCTURE HUD OVERLAY (LOWER REGION) */
+    .decision-hud{
+      position:absolute;
+      left:50%;
+      bottom:calc(22 * var(--u));
+      transform:translateX(-50%);
+      width:min(calc(1000 * var(--u)), 92vw);
+      height:calc(100 * var(--u));
+      pointer-events:none;
+      z-index:2;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 calc(16 * var(--u));
+    }
+
+    .hud-node{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:calc(5 * var(--u));
+      opacity:.18;
+      transition:opacity .3s ease;
+    }
+
+    .hud-dot{
+      width:calc(5 * var(--u));
+      height:calc(5 * var(--u));
+      border-radius:50%;
+      background:#ffffff;
+      box-shadow:0 0 calc(6 * var(--u)) var(--devyra-cyan);
+      position:relative;
+    }
+
+    .hud-dot::after{
+      content:"";
+      position:absolute;
+      inset:calc(-3 * var(--u));
+      border-radius:50%;
+      border:1px solid rgba(138,180,255,.4);
+    }
+
+    .hud-label{
+      font-size:calc(9.5 * var(--u));
+      font-weight:550;
+      letter-spacing:calc(0.8 * var(--u));
+      color:rgba(255,255,255,.9);
+      text-transform:uppercase;
+      white-space:nowrap;
+    }
+
+    .hud-connector{
+      flex:1;
+      height:1px;
+      margin:0 calc(10 * var(--u));
+      background:linear-gradient(90deg, rgba(255,255,255,.04), rgba(138,180,255,.18), rgba(255,255,255,.04));
+      position:relative;
+      overflow:hidden;
+    }
+
+    .hud-connector::after{
+      content:"";
+      position:absolute;
+      top:0;
+      left:0;
+      width:calc(30 * var(--u));
+      height:100%;
+      background:linear-gradient(90deg, transparent, var(--devyra-cyan), transparent);
+      animation:hud-pulse 4s cubic-bezier(.4,0,.2,1) infinite;
+    }
+
+    .hud-connector.c2::after{
+      animation-delay:1.0s;
+    }
+    .hud-connector.c3::after{
+      animation-delay:2.0s;
+    }
+    .hud-connector.c4::after{
+      animation-delay:3.0s;
+    }
+
+    @keyframes hud-pulse{
+      0%{ transform:translateX(-100%); opacity:0; }
+      20%{ opacity:1; }
+      80%{ opacity:1; }
+      100%{ transform:translateX(800%); opacity:0; }
+    }
+
+    /* ENTRANCE ANIMATIONS */
+    .intro .brand{
+      opacity:0;
+    }
+    .intro .nav-link{
+      opacity:0;
+      transform:translate3d(0, var(--rise), 0);
+    }
+    .intro .actions .btn{
+      opacity:0;
+    }
+    .intro .pill{
+      opacity:0;
+      transform:translate3d(0, var(--rise), 0);
+    }
+    .intro .ln-i{
+      transform:translate3d(0,115%,0);
+    }
+    .intro .sub{
+      opacity:0;
+      transform:translate3d(0, var(--rise), 0);
+    }
+    .intro .ctas .btn{
+      opacity:0;
+      transform:translate3d(0, var(--rise), 0);
+    }
+    .intro .decision-hud,
+    .intro .infra-canvas{
+      opacity:0;
+    }
+
+    .ready .brand{
+      animation:i-fade .62s var(--e-nav) 0ms forwards;
+    }
+
+    .ready .nav-link{
+      animation:i-rise .62s var(--e-nav) forwards;
+    }
+    .ready .nav-link:nth-child(1){ animation-delay:100ms; }
+    .ready .nav-link:nth-child(2){ animation-delay:150ms; }
+    .ready .nav-link:nth-child(3){ animation-delay:200ms; }
+    .ready .nav-link:nth-child(4){ animation-delay:250ms; }
+    .ready .nav-link:nth-child(5){ animation-delay:300ms; }
+
+    .ready .actions .btn{
+      animation:i-fade .62s var(--e-nav) 380ms forwards;
+    }
+
+    .ready .pill{
+      animation:i-rise .62s var(--e-soft) 420ms forwards;
+    }
+
+    .ready .ln:nth-child(1) .ln-i{
+      animation:i-line .95s var(--e-reveal) 520ms forwards;
+    }
+
+    .ready .ln:nth-child(2) .ln-i{
+      animation:i-line .95s var(--e-reveal) 650ms forwards;
+    }
+
+    .ready .sub{
+      animation:i-rise .70s var(--e-soft) 850ms forwards;
+    }
+
+    .ready .ctas .btn:nth-child(1){
+      animation:i-rise .62s var(--e-soft) 1020ms forwards;
+    }
+
+    .ready .ctas .btn:nth-child(2){
+      animation:i-rise .62s var(--e-soft) 1120ms forwards;
+    }
+
+    .ready .decision-hud,
+    .ready .infra-canvas{
+      animation:i-fade 1.2s ease 800ms forwards;
+    }
+
+    /* SETTLED STATE AFTER ANIMATION COMPLETION */
+    .entered .brand,
+    .entered .nav-link,
+    .entered .actions .btn,
+    .entered .pill,
+    .entered .ln-i,
+    .entered .sub,
+    .entered .ctas .btn,
+    .entered .decision-hud,
+    .entered .infra-canvas{
+      opacity:1!important;
+      transform:none!important;
+      animation:none!important;
+      will-change:auto!important;
+    }
+
+    @keyframes i-line{
+      from{
+        transform:translate3d(0,115%,0);
+      }
+      to{
+        transform:none;
+      }
+    }
+
+    @keyframes i-rise{
+      from{
+        opacity:0;
+        transform:translate3d(0, var(--rise), 0);
+      }
+      to{
+        opacity:1;
+        transform:none;
+      }
+    }
+
+    @keyframes i-fade{
+      from{
+        opacity:0;
+      }
+      to{
+        opacity:1;
+      }
+    }
+
+    /* ACCESSIBILITY & FOCUS */
+    a:focus-visible,
+    button:focus-visible{
+      outline:2px solid #9b8cff;
+      outline-offset:3px;
+      border-radius:4px;
+    }
+
+    .sr{
+      position:absolute;
+      width:1px;
+      height:1px;
+      padding:0;
+      margin:-1px;
+      overflow:hidden;
+      clip:rect(0,0,0,0);
+      white-space:nowrap;
+      border:0;
+    }
+
+    /* =========================================================
+       DEVYRA PRODUCT EXPERIENCE MODAL (APEXCLOUD DEMO STORY)
+       ========================================================= */
+    .modal-backdrop{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.78);
+      backdrop-filter:blur(20px);
+      -webkit-backdrop-filter:blur(20px);
+      z-index:99;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .22s cubic-bezier(.22,1,.36,1);
+    }
+
+    .modal-backdrop[data-active="true"]{
+      opacity:1;
+      pointer-events:auto;
+    }
+
+    .modal-window{
+      width:100%;
+      max-width:920px;
+      max-height:88vh;
+      background:rgba(10,12,18,0.96);
+      border:1px solid rgba(255,255,255,0.16);
+      box-shadow:0 32px 80px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.06);
+      border-radius:18px;
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+      transform:scale(0.96) translateY(12px);
+      transition:transform .22s cubic-bezier(.22,1,.36,1);
+    }
+
+    .modal-backdrop[data-active="true"] .modal-window{
+      transform:scale(1) translateY(0);
+    }
+
+    .modal-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:14px 22px;
+      border-bottom:1px solid rgba(255,255,255,0.08);
+      background:rgba(255,255,255,0.02);
+      flex-shrink:0;
+      gap:12px;
+    }
+
+    .modal-brand-badge{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    .modal-devyra-logo{
+      display:flex;
+      align-items:center;
+      gap:7px;
+      font-weight:600;
+      font-size:13px;
+      color:#fff;
+      padding-right:10px;
+      border-right:1px solid rgba(255,255,255,0.12);
+    }
+    .modal-devyra-logo svg{
+      width:16px;
+      height:16px;
+    }
+
+    .btn-reset-demo{
+      background:rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.14);
+      color:rgba(255,255,255,0.65);
+      font-size:11.5px;
+      font-weight:500;
+      padding:5px 12px;
+      border-radius:6px;
+      cursor:pointer;
+      transition:all .15s ease;
+      white-space:nowrap;
+    }
+    .btn-reset-demo:hover{
+      background:rgba(255,121,121,0.15);
+      color:#ff7979;
+      border-color:rgba(255,121,121,0.3);
+    }
+
+    .badge-company{
+      font-size:12.5px;
+      font-weight:600;
+      color:#fff;
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+
+    .badge-demo{
+      font-size:10px;
+      font-weight:600;
+      color:rgba(255,255,255,0.7);
+      background:rgba(255,255,255,0.08);
+      border:1px solid rgba(255,255,255,0.15);
+      padding:2px 8px;
+      border-radius:4px;
+      letter-spacing:0.5px;
+      text-transform:uppercase;
+    }
+
+    .modal-tabs{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      overflow-x:auto;
+      scrollbar-width:none;
+    }
+    .modal-tabs::-webkit-scrollbar{ display:none; }
+
+    .modal-tab{
+      background:transparent;
+      border:none;
+      color:rgba(255,255,255,0.55);
+      font-size:12.5px;
+      font-weight:500;
+      padding:6px 12px;
+      border-radius:8px;
+      cursor:pointer;
+      transition:all .16s ease;
+      white-space:nowrap;
+    }
+
+    .modal-tab:hover{
+      color:#fff;
+      background:rgba(255,255,255,0.06);
+    }
+
+    .modal-tab[data-active="true"]{
+      color:#fff;
+      background:rgba(255,255,255,0.12);
+      box-shadow:0 0 12px rgba(138,180,255,0.2);
+    }
+
+    .modal-close{
+      background:rgba(255,255,255,0.08);
+      border:1px solid rgba(255,255,255,0.12);
+      color:#fff;
+      width:30px;
+      height:30px;
+      border-radius:50%;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:15px;
+      transition:all .16s ease;
+      flex-shrink:0;
+    }
+
+    .modal-close:hover{
+      background:rgba(255,255,255,0.18);
+      transform:scale(1.05);
+    }
+
+    .modal-body{
+      padding:28px 32px;
+      overflow-y:auto;
+      scrollbar-width:thin;
+      scrollbar-color:rgba(255,255,255,0.2) transparent;
+      max-height:calc(88vh - 65px);
+    }
+
+    .modal-pane{
+      display:none;
+    }
+
+    .modal-pane[data-active="true"]{
+      display:block;
+      animation:paneFade .2s ease forwards;
+    }
+
+    @keyframes paneFade{
+      from{ opacity:0; transform:translateY(6px); }
+      to{ opacity:1; transform:none; }
+    }
+
+    .pane-tag{
+      display:inline-block;
+      font-size:11px;
+      font-weight:600;
+      letter-spacing:0.8px;
+      text-transform:uppercase;
+      color:var(--devyra-cyan);
+      background:rgba(125,231,255,0.1);
+      padding:3px 9px;
+      border-radius:5px;
+      margin-bottom:12px;
+      border:1px solid rgba(125,231,255,0.2);
+    }
+
+    .pane-tag.warning{
+      color:#ffb86c;
+      background:rgba(255,184,108,0.1);
+      border-color:rgba(255,184,108,0.25);
+    }
+
+    .pane-title{
+      font-size:24px;
+      font-weight:600;
+      margin:0 0 8px;
+      color:#fff;
+      letter-spacing:-0.4px;
+    }
+
+    .pane-desc{
+      font-size:14px;
+      line-height:1.6;
+      color:rgba(255,255,255,0.65);
+      margin:0 0 22px;
+    }
+
+    /* PRODUCT METRIC TILES */
+    .metric-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
+      gap:12px;
+      margin-bottom:22px;
+    }
+
+    .metric-card{
+      background:rgba(255,255,255,0.03);
+      border:1px solid rgba(255,255,255,0.09);
+      border-radius:12px;
+      padding:16px;
+    }
+
+    .metric-number{
+      font-size:26px;
+      font-weight:600;
+      color:#fff;
+      letter-spacing:-0.5px;
+    }
+
+    .metric-number.alert{
+      color:#ff7979;
+    }
+
+    .metric-number.success{
+      color:#7de7ff;
+    }
+
+    .metric-label{
+      font-size:11.5px;
+      color:rgba(255,255,255,0.5);
+      margin-top:4px;
+      text-transform:uppercase;
+      letter-spacing:0.4px;
+    }
+
+    .metric-sub{
+      font-size:11px;
+      color:rgba(255,255,255,0.38);
+      margin-top:6px;
+    }
+
+    /* POLICY CODE / SPECIFICATION BOX */
+    .policy-box{
+      background:rgba(0,0,0,0.45);
+      border:1px solid rgba(255,255,255,0.1);
+      border-radius:12px;
+      padding:18px 20px;
+      font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+      font-size:13px;
+      line-height:1.6;
+      color:rgba(255,255,255,0.85);
+      margin-bottom:20px;
+    }
+
+    .policy-box .kw{ color:#9b8cff; font-weight:600; }
+    .policy-box .val{ color:#7de7ff; }
+    .policy-box .cmt{ color:rgba(255,255,255,0.4); font-style:italic; }
+
+    /* ACTION BUTTONS IN MODAL */
+    .action-row{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      margin-top:20px;
+      flex-wrap:wrap;
+    }
+
+    /* STEP SEQUENCE BAR */
+    .seq-bar{
+      display:flex;
+      align-items:center;
+      background:rgba(255,255,255,0.03);
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:10px;
+      padding:10px 14px;
+      margin-bottom:20px;
+      gap:8px;
+      overflow-x:auto;
+    }
+
+    .seq-step{
+      font-size:11px;
+      font-weight:600;
+      letter-spacing:0.8px;
+      color:rgba(255,255,255,0.35);
+      text-transform:uppercase;
+      display:flex;
+      align-items:center;
+      gap:6px;
+      white-space:nowrap;
+    }
+
+    .seq-step.active{
+      color:#7de7ff;
+    }
+
+    .seq-step.done{
+      color:rgba(255,255,255,0.8);
+    }
+
+    .seq-arrow{
+      color:rgba(255,255,255,0.18);
+      font-size:10px;
+    }
+
+    /* EVIDENCE CARDS */
+    .evidence-item{
+      background:rgba(255,255,255,0.02);
+      border:1px solid rgba(255,255,255,0.09);
+      border-left:3px solid #ff7979;
+      border-radius:10px;
+      padding:16px 20px;
+      margin-bottom:14px;
+    }
+
+    .evidence-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:8px;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+
+    .evidence-title{
+      font-size:15px;
+      font-weight:600;
+      color:#fff;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    .evidence-id{
+      font-family:ui-monospace,Consolas,monospace;
+      font-size:11px;
+      background:rgba(255,255,255,0.08);
+      padding:2px 7px;
+      border-radius:4px;
+      color:rgba(255,255,255,0.7);
+    }
+
+    .evidence-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:12px;
+      margin-top:10px;
+      padding-top:10px;
+      border-top:1px solid rgba(255,255,255,0.06);
+    }
+
+    .evidence-col-title{
+      font-size:11px;
+      font-weight:600;
+      color:rgba(255,255,255,0.45);
+      text-transform:uppercase;
+      margin-bottom:4px;
+    }
+
+    .evidence-col-desc{
+      font-size:12.5px;
+      color:rgba(255,255,255,0.8);
+      line-height:1.45;
+      margin:0;
+    }
+
+    /* COMPARISON TABLE */
+    .compare-table{
+      width:100%;
+      border-collapse:collapse;
+      margin:16px 0 24px;
+      font-size:13px;
+    }
+
+    .compare-table th{
+      text-align:left;
+      padding:12px 14px;
+      background:rgba(255,255,255,0.03);
+      color:rgba(255,255,255,0.5);
+      font-weight:600;
+      font-size:11.5px;
+      text-transform:uppercase;
+      border-bottom:1px solid rgba(255,255,255,0.1);
+    }
+
+    .compare-table td{
+      padding:12px 14px;
+      border-bottom:1px solid rgba(255,255,255,0.06);
+      color:rgba(255,255,255,0.85);
+    }
+
+    .compare-table tr:hover td{
+      background:rgba(255,255,255,0.02);
+    }
+
+    .table-badge{
+      padding:3px 8px;
+      border-radius:5px;
+      font-size:11px;
+      font-weight:600;
+    }
+
+    .table-badge.bad{
+      background:rgba(255,121,121,0.12);
+      color:#ff7979;
+      border:1px solid rgba(255,121,121,0.25);
+    }
+
+    .table-badge.good{
+      background:rgba(125,231,255,0.12);
+      color:#7de7ff;
+      border:1px solid rgba(125,231,255,0.25);
+    }
+
+    /* AUDIT TABLE */
+    .audit-table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:12.5px;
+    }
+
+    .audit-table th{
+      text-align:left;
+      padding:10px 12px;
+      color:rgba(255,255,255,0.45);
+      font-weight:600;
+      font-size:11px;
+      text-transform:uppercase;
+      border-bottom:1px solid rgba(255,255,255,0.08);
+    }
+
+    .audit-table td{
+      padding:10px 12px;
+      border-bottom:1px solid rgba(255,255,255,0.05);
+      color:rgba(255,255,255,0.8);
+      font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+    }
+
+    /* ACTIVITY FEED */
+    .activity-feed{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      margin-top:16px;
+    }
+
+    .activity-row{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:10px 14px;
+      background:rgba(255,255,255,0.02);
+      border:1px solid rgba(255,255,255,0.06);
+      border-radius:8px;
+      font-size:13px;
+    }
+
+    .activity-dot{
+      width:7px;
+      height:7px;
+      border-radius:50%;
+      background:#7de7ff;
+      flex-shrink:0;
+    }
+
+    .activity-time{
+      font-size:11px;
+      color:rgba(255,255,255,0.4);
+      margin-left:auto;
+      font-family:ui-monospace,monospace;
+    }
+
+    /* RESPONSIVE SYSTEM */
+    @media(max-width:1023px){
+      :root{
+        --u:calc(100vw / 900);
+      }
+
+      .bar{
+        left:4.2vw;
+        width:91.6vw;
+      }
+
+      .links{
+        display:none;
+      }
+
+      .bar .solid{
+        display:none;
+      }
+
+      .menu{
+        display:inline-flex;
+      }
+
+      .decision-hud{
+        display:none;
+      }
+    }
+
+    @media(max-width:640px){
+      :root{
+        --u:calc(100vw / 486);
+      }
+
+      .bar{
+        left:5.2vw;
+        width:89.6vw;
+      }
+
+      .hero p{
+        width:min(calc(560 * var(--u)), 88vw);
+        line-height:calc(23 * var(--u));
+      }
+
+      .pill{
+        padding-right:calc(8 * var(--u));
+      }
+
+      .headline{
+        font-size:calc(38 * var(--u));
+        line-height:calc(42 * var(--u));
+        letter-spacing:calc(-0.4 * var(--u));
+      }
+
+      .ctas{
+        flex-direction:column;
+        width:100%;
+        max-width:calc(320 * var(--u));
+      }
+
+      .ctas .btn{
+        width:100%;
+      }
+
+      .modal-backdrop{
+        padding:10px;
+      }
+
+      .modal-body{
+        padding:18px 14px;
+      }
+
+      .evidence-grid{
+        grid-template-columns:1fr;
+      }
+    }
+
+    @media(max-width:380px){
+      :root{
+        --u:calc(100vw / 470);
+      }
+    }
+
+    @media(max-width:1023px) and (max-height:520px){
+      :root{
+        --u:min(
+          calc(100vw / 900),
+          calc(100vh / 470)
+        );
+      }
+    }
+
+    @media(min-aspect-ratio:3/1){
+      .sky{
+        top:auto;
+        bottom:0;
+        height:auto;
+        min-height:0;
+        width:100%;
+        min-width:100%;
+      }
+
+      .veil{
+        background:
+          linear-gradient(
+            to bottom,
+            rgba(0,0,0,.82) 0%,
+            rgba(0,0,0,.72) 55%,
+            rgba(0,0,0,.18) 100%
+          );
+      }
+    }
+
+    /* REDUCED MOTION */
+    @media(prefers-reduced-motion:reduce){
+      *,
+      *::before,
+      *::after{
+        transition:none!important;
+        animation:none!important;
+      }
+
+      .intro .brand,
+      .intro .nav-link,
+      .intro .actions .btn,
+      .intro .pill,
+      .intro .ln-i,
+      .intro .sub,
+      .intro .ctas .btn,
+      .intro .decision-hud,
+      .intro .infra-canvas{
+        opacity:1!important;
+        transform:none!important;
+      }
+
+      .cursor-glow{
+        display:none!important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <!-- Cinematic Looping Silent Background Video with High-Res Real WebP Fallback Poster -->
+    <video class="sky" autoplay muted loop playsinline preload="auto" poster="assets/images/devyra-hero.webp">
+      <source src="assets/videos/devyra-hero.mp4" type="video/mp4">
+    </video>
+
+    <!-- Procedural Decision Infrastructure Canvas (Nodes, Pulses, Verification Traces) -->
+    <canvas class="infra-canvas" id="infraCanvas" aria-hidden="true"></canvas>
+
+    <!-- Ambient Veil Layer -->
+    <div class="veil"></div>
+
+    <!-- Micro Cursor Glow -->
+    <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
+
+    <!-- Header Bar -->
+    <header class="bar" id="topBar" data-open="false">
+      <a href="#" class="brand" aria-label="Devyra">
+        <svg class="brand-mark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <!-- Geometric Decision Node & Verification Diamond -->
+          <polygon points="12,2 21,7.5 21,16.5 12,22 3,16.5 3,7.5" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round" opacity="0.95"/>
+          <polygon points="12,6.5 17,9.5 17,14.5 12,17.5 7,14.5 7,9.5" fill="url(#brandGrad)" fill-opacity="0.25" stroke="#8ab4ff" stroke-width="1.2"/>
+          <circle cx="12" cy="12" r="2.2" fill="#ffffff"/>
+          <circle cx="12" cy="12" r="4.2" stroke="#7de7ff" stroke-width="0.8" stroke-dasharray="1.5 1.5"/>
+          <defs>
+            <linearGradient id="brandGrad" x1="7" y1="6.5" x2="17" y2="17.5" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#8ab4ff"/>
+              <stop offset="1" stop-color="#9b8cff"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <span class="brand-text">Devyra</span>
+      </a>
+
+      <nav class="links" aria-label="Main navigation">
+        <a href="#overview" class="nav-link">Overview</a>
+        <a href="#decisions" class="nav-link">Decisions</a>
+        <a href="#test-lab" class="nav-link">Test Lab</a>
+        <a href="#policies" class="nav-link">Policies</a>
+        <a href="#monitor" class="nav-link">Monitor</a>
+      </nav>
+
+      <div class="actions">
+        <a href="#overview" class="btn ghost">Try Devyra</a>
+        <a href="#request-demo" class="btn solid">Request demo</a>
+        <button class="menu" id="menuToggle" aria-expanded="false" aria-label="Menu" aria-controls="mobileSheet">
+          <svg class="menu-icon" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+            <path class="menu-line top" d="M2.5 5H15.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <path class="menu-line mid" d="M2.5 9H15.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <path class="menu-line bot" d="M2.5 13H15.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Mobile Sheet Navigation -->
+      <div class="sheet" id="mobileSheet" role="dialog" aria-modal="true" aria-label="Mobile Navigation">
+        <nav class="sheet-links">
+          <a href="#overview" class="sheet-link">Overview</a>
+          <a href="#decisions" class="sheet-link">Decisions</a>
+          <a href="#test-lab" class="sheet-link">Test Lab</a>
+          <a href="#policies" class="sheet-link">Policies</a>
+          <a href="#monitor" class="sheet-link">Monitor</a>
+          <a href="#audit" class="sheet-link">Audit Trail</a>
+        </nav>
+        <div class="sheet-actions">
+          <a href="#overview" class="btn ghost">Try Devyra</a>
+          <a href="#request-demo" class="btn solid">Request demo</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Screen & Centered Hero Layer -->
+    <div class="screen">
+      <main class="hero">
+        <a href="#overview" class="pill" aria-label="New feature: AI Decision Reliability">
+          <span class="pill-badge">NEW</span>
+          <span class="pill-text">AI Decision Reliability</span>
+          <span class="pill-arrow" aria-hidden="true">→</span>
+        </a>
+
+        <h1 class="headline">
+          <span class="ln">
+            <span class="ln-i">Test every critical decision</span>
+          </span>
+          <span class="ln">
+            <span class="ln-i">before it impacts your business</span>
+          </span>
+        </h1>
+
+        <p class="sub">Discover vulnerabilities, stress-test automated decisions, and simulate safer policies before they reach production.</p>
+
+        <div class="ctas">
+          <a href="#test-lab" class="btn solid">Run a stress test</a>
+          <a href="#decisions" class="btn ghost">Explore Devyra</a>
+        </div>
+      </main>
+
+      <!-- Abstract Decision Intelligence HUD Signal (Decision -> Test -> Risk -> Policy -> Approval) -->
+      <div class="decision-hud" aria-hidden="true">
+        <div class="hud-node">
+          <span class="hud-dot"></span>
+          <span class="hud-label">DECISION</span>
+        </div>
+        <div class="hud-connector c1"></div>
+        <div class="hud-node">
+          <span class="hud-dot"></span>
+          <span class="hud-label">TEST</span>
+        </div>
+        <div class="hud-connector c2"></div>
+        <div class="hud-node">
+          <span class="hud-dot"></span>
+          <span class="hud-label">RISK</span>
+        </div>
+        <div class="hud-connector c3"></div>
+        <div class="hud-node">
+          <span class="hud-dot"></span>
+          <span class="hud-label">POLICY</span>
+        </div>
+        <div class="hud-connector c4"></div>
+        <div class="hud-node">
+          <span class="hud-dot"></span>
+          <span class="hud-label">APPROVAL</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INTERACTIVE DEVYRA PRODUCT APPLICATION DIALOG -->
+  <div class="modal-backdrop" id="devyraModal" data-active="false" role="dialog" aria-modal="true" aria-label="Devyra Platform Dialog">
+    <div class="modal-window">
+      <div class="modal-head">
+        <div class="modal-brand-badge">
+          <div class="modal-devyra-logo">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <polygon points="12,2 21,7.5 21,16.5 12,22 3,16.5 3,7.5" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round"/>
+              <circle cx="12" cy="12" r="2.5" fill="#7de7ff"/>
+            </svg>
+            <span>Devyra</span>
+          </div>
+          <span class="badge-company">◈ ApexCloud</span>
+          <span class="badge-demo">SYNTHETIC DEMO</span>
+        </div>
+
+        <div class="modal-tabs">
+          <button class="modal-tab" data-tab="overview">Overview</button>
+          <button class="modal-tab" data-tab="decisions">Decisions</button>
+          <button class="modal-tab" data-tab="test-lab">Test Lab</button>
+          <button class="modal-tab" data-tab="policies">Policies</button>
+          <button class="modal-tab" data-tab="monitor">Monitor</button>
+          <button class="modal-tab" data-tab="audit">Audit</button>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button class="btn-reset-demo" onclick="DevyraApp.resetDemo()" title="Restore initial demo state">Reset demo</button>
+          <button class="modal-close" id="modalCloseBtn" aria-label="Close dialog">✕</button>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <!-- 1. OVERVIEW PANE (#overview) -->
+        <div class="modal-pane" id="pane-overview">
+          <span class="pane-tag warning" id="ovStatusTag">Needs attention</span>
+          <h2 class="pane-title">What should I worry about today?</h2>
+          <p class="pane-desc">Automated monitoring detected critical policy degradation on ApexCloud's automated refund gate. Abusive refund clusters are bypassing Policy V1 bounds.</p>
+
+          <div class="metric-grid">
+            <div class="metric-card">
+              <div class="metric-number alert" id="ovReliability">76.0%</div>
+              <div class="metric-label">Reliability</div>
+              <div class="metric-sub">Correct decisions / total cases</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-number alert" id="ovVulns">3</div>
+              <div class="metric-label">Active Vulnerabilities</div>
+              <div class="metric-sub">Uncontained attack vectors</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-number" id="ovCases">10,000</div>
+              <div class="metric-label">Historical Cases</div>
+              <div class="metric-sub">Synthetic evaluation window</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-number alert" id="ovExposure">₹11,62,400</div>
+              <div class="metric-label">Potential Exposure</div>
+              <div class="metric-sub">Sum of wrongly approved abusive refunds</div>
+            </div>
+          </div>
+
+          <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:18px; margin-bottom:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <h3 style="font-size:15px; margin:0; color:#fff;">Target Decision: Customer Refund Approval</h3>
+              <span id="ovPolicyStatusBadge" style="font-size:12px; color:#ff7979; font-weight:600;">Production Policy V1 Vulnerable</span>
+            </div>
+            <p style="font-size:13px; color:rgba(255,255,255,0.6); margin:0 0 14px; line-height:1.5;">
+              Production policy is approving splitting bursts, velocity attacks, and multi-account burner syndicates. Inspect the decision logic or run the stress test suite directly.
+            </p>
+            <div class="action-row" style="margin-top:10px;">
+              <button class="btn solid" onclick="DevyraApp.navTo('decision/refund')" style="height:38px; font-weight:600; padding:0 22px;">
+                OPEN DECISION
+              </button>
+              <button class="btn ghost" onclick="DevyraApp.navTo('test-lab')" style="height:38px; padding:0 18px;">
+                RUN STRESS TEST
+              </button>
+            </div>
+          </div>
+
+          <h3 style="font-size:14px; margin:22px 0 10px; color:#fff; text-transform:uppercase; letter-spacing:0.5px;">Recent Activity</h3>
+          <div class="activity-feed" id="ovActivityFeed">
+            <div class="activity-row">
+              <span class="activity-dot"></span>
+              <span>ApexCloud customer refund gate initialized under Policy V1</span>
+              <span class="activity-time">Baseline</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. DECISIONS CATALOG PANE (#decisions) -->
+        <div class="modal-pane" id="pane-decisions">
+          <span class="pane-tag">Decision Inventory</span>
+          <h2 class="pane-title">Decisions</h2>
+          <p class="pane-desc">Production decision catalog for ApexCloud · Automated business decisions.</p>
+
+          <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.09); border-radius:12px; padding:20px; margin-bottom:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
+              <div>
+                <h3 style="font-size:17px; margin:0 0 4px; color:#fff;">Customer Refund Approval</h3>
+                <div style="font-size:12.5px; color:rgba(255,255,255,0.5);">ApexCloud · Automated business decision</div>
+              </div>
+              <span class="table-badge bad" id="decCardStatus">Needs attention</span>
+            </div>
+
+            <div class="metric-grid" style="margin-bottom:16px;">
+              <div class="metric-card">
+                <div class="metric-number alert" id="decReliability">76.0%</div>
+                <div class="metric-label">Reliability</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-number alert" id="decAttackRes">0.0%</div>
+                <div class="metric-label">Attack Resistance</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-number alert" id="decExposure">₹11,62,400</div>
+                <div class="metric-label">Exposure</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-number" id="decAutoRate">100.0%</div>
+                <div class="metric-label">Automated Rate</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-number" id="decHumanReview">0.0%</div>
+                <div class="metric-label">Human Review</div>
+              </div>
+            </div>
+
+            <div class="action-row" style="margin-top:14px;">
+              <button class="btn solid" onclick="DevyraApp.navTo('decision/refund')" style="height:38px; font-weight:600; padding:0 22px;">
+                VIEW DECISION
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. DECISION DETAIL PANE (#decision/refund) -->
+        <div class="modal-pane" id="pane-decision-detail">
+          <span class="pane-tag" id="dtlStatusTag">Automated business decision</span>
+          <h2 class="pane-title">Customer Refund Approval</h2>
+          <p class="pane-desc">ApexCloud · Automated business decision</p>
+
+          <div style="margin-bottom:20px;">
+            <div style="font-size:12px; font-weight:600; text-transform:uppercase; color:rgba(255,255,255,0.5); margin-bottom:8px;">Current Production Policy V1</div>
+            <div class="policy-box">
+<span class="kw">Approve when:</span>
+  refund_amount ≤ <span class="val">₹500</span>
+  <span class="kw">AND</span>
+  customer_account_age ≥ <span class="val">30 days</span>
+  <span class="kw">AND</span>
+  refund_count_30d &lt; <span class="val">3</span>
+            </div>
+          </div>
+
+          <div class="metric-grid">
+            <div class="metric-card">
+              <div class="metric-number alert" id="dtlReliability">76.0%</div>
+              <div class="metric-label">Reliability</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-number alert" id="dtlAttackRes">0.0%</div>
+              <div class="metric-label">Attack Resistance</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-number alert" id="dtlExposure">₹11,62,400</div>
+              <div class="metric-label">Exposure</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-number" id="dtlAutoRate">100.0%</div>
+              <div class="metric-label">Automated Decisions</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-number" id="dtlHumanRate">0.0%</div>
+              <div class="metric-label">Human Review</div>
+            </div>
+          </div>
+
+          <div class="action-row">
+            <button class="btn solid" onclick="DevyraApp.navTo('test-lab')" style="height:42px; padding:0 24px; font-weight:600; font-size:14px; background:#fff; color:#000;">
+              RUN STRESS TEST
+            </button>
+            <button class="btn ghost" onclick="DevyraApp.navTo('decisions')" style="height:42px; padding:0 18px;">
+              ← Back to Decisions
+            </button>
+          </div>
+        </div>
+
+        <!-- 4. TEST LAB PANE (#test-lab) -->
+        <div class="modal-pane" id="pane-test-lab">
+          <span class="pane-tag">Adversarial Evaluation</span>
+          <h2 class="pane-title">Customer Refund Approval — Stress Test</h2>
+          <p class="pane-desc">Run adversarial scenarios against the current production policy.</p>
+
+          <div class="seq-bar" id="labSeqBar">
+            <div class="seq-step active" id="seq-CONNECT"><span>1</span> CONNECT</div>
+            <span class="seq-arrow">→</span>
+            <div class="seq-step" id="seq-DISCOVER"><span>2</span> DISCOVER</div>
+            <span class="seq-arrow">→</span>
+            <div class="seq-step" id="seq-TEST"><span>3</span> TEST</div>
+            <span class="seq-arrow">→</span>
+            <div class="seq-step" id="seq-ATTACK"><span>4</span> ATTACK</div>
+            <span class="seq-arrow">→</span>
+            <div class="seq-step" id="seq-DETECT"><span>5</span> DETECT</div>
+            <span class="seq-arrow">→</span>
+            <div class="seq-step" id="seq-ANALYZE"><span>6</span> ANALYZE</div>
+          </div>
+
+          <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:18px; margin-bottom:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <div style="font-size:12.5px; font-weight:600; color:rgba(255,255,255,0.7); text-transform:uppercase;">Configured Test Suite</div>
+              <span class="badge-demo" style="color:#7de7ff; border-color:rgba(125,231,255,0.3); font-weight:600;">READY</span>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px; font-size:13px; color:rgba(255,255,255,0.85);">
+              <div>✓ Refund splitting</div>
+              <div>✓ Refund velocity abuse</div>
+              <div>✓ Multi-account abuse</div>
+              <div>✓ Boundary manipulation</div>
+              <div>✓ Historical replay</div>
+            </div>
+
+            <div style="margin-top:18px;">
+              <button class="btn solid" id="executeTestBtn" onclick="DevyraApp.executeStressTest()" style="height:40px; font-weight:600;">
+                EXECUTE STRESS TEST
+              </button>
+            </div>
+          </div>
+
+          <!-- RESULTS CONTAINER (SHOWN AFTER TEST) -->
+          <div id="testResultsWrap" style="display:none;">
+            <div style="border-top:1px solid rgba(255,255,255,0.1); padding-top:20px; margin-top:20px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                <h3 style="margin:0; font-size:18px; color:#fff;">Stress Test Results</h3>
+                <span class="table-badge bad" style="font-size:12px;">3 Failed Scenarios</span>
+              </div>
+
+              <div class="metric-grid">
+                <div class="metric-card">
+                  <div class="metric-number alert">76.0%</div>
+                  <div class="metric-label">Reliability</div>
+                  <div class="metric-sub">Correct decisions / total test cases (7,600 / 10,000)</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-number alert">3</div>
+                  <div class="metric-label">Failed Scenarios</div>
+                  <div class="metric-sub">Adversarial patterns breached Policy V1</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-number alert">₹11,62,400</div>
+                  <div class="metric-label">Potential Exposure</div>
+                  <div class="metric-sub">Sum of wrongly approved abusive refunds</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-number alert">0.0%</div>
+                  <div class="metric-label">Attack Resistance</div>
+                  <div class="metric-sub">V1 caught 0 of 2,400 injected attack cases</div>
+                </div>
+              </div>
+
+              <h4 style="font-size:14px; margin:22px 0 12px; color:#fff; text-transform:uppercase; letter-spacing:0.5px;">HOW IT FAILED — Adversarial Evidence</h4>
+
+              <!-- EVIDENCE 1: REFUND SPLITTING -->
+              <div class="evidence-item">
+                <div class="evidence-head">
+                  <span class="evidence-title">❌ Refund Splitting <span class="evidence-id">Case ID: RF-008421</span></span>
+                  <span style="font-size:12px; color:rgba(255,255,255,0.5);">Customer: CUST-1842</span>
+                </div>
+                <div style="font-size:12.5px; color:#7de7ff; font-family:monospace; margin-bottom:6px;">
+                  Refunds: ₹480 + ₹470 + ₹490 · 30-day total: ₹1,440
+                </div>
+                <div class="evidence-grid">
+                  <div>
+                    <div class="evidence-col-title">Observed</div>
+                    <p class="evidence-col-desc">Customer divided a large refund into several smaller refunds.</p>
+                  </div>
+                  <div>
+                    <div class="evidence-col-title">Why V1 Failed</div>
+                    <p class="evidence-col-desc">V1 evaluates each refund independently without rolling window aggregations.</p>
+                  </div>
+                  <div>
+                    <div class="evidence-col-title">Risk</div>
+                    <p class="evidence-col-desc">Customer remains below single-refund threshold while bypassing the intended control.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- EVIDENCE 2: REFUND VELOCITY -->
+              <div class="evidence-item">
+                <div class="evidence-head">
+                  <span class="evidence-title">❌ Refund Velocity Abuse <span class="evidence-id">Case ID: RF-009104</span></span>
+                  <span style="font-size:12px; color:rgba(255,255,255,0.5);">Customer: CUST-3901</span>
+                </div>
+                <div style="font-size:12.5px; color:#7de7ff; font-family:monospace; margin-bottom:6px;">
+                  Burst: 3 refund requests in 18 minutes · Total: ₹1,420
+                </div>
+                <div class="evidence-grid">
+                  <div>
+                    <div class="evidence-col-title">Observed</div>
+                    <p class="evidence-col-desc">Automated script triggered multiple refunds back-to-back.</p>
+                  </div>
+                  <div>
+                    <div class="evidence-col-title">Why V1 Failed</div>
+                    <p class="evidence-col-desc">V1 lacks sub-hourly velocity throttling.</p>
+                  </div>
+                  <div>
+                    <div class="evidence-col-title">Risk</div>
+                    <p class="evidence-col-desc">Funds drained before 30-day batch count updates.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- EVIDENCE 3: MULTI-ACCOUNT -->
+              <div class="evidence-item">
+                <div class="evidence-head">
+                  <span class="evidence-title">❌ Multi-Account Abuse <span class="evidence-id">Case ID: RF-007238</span></span>
+                  <span style="font-size:12px; color:rgba(255,255,255,0.5);">Customer: CUST-9012</span>
+                </div>
+                <div style="font-size:12.5px; color:#7de7ff; font-family:monospace; margin-bottom:6px;">
+                  Linked: 4 accounts sharing device fingerprint & payment card · Total: ₹1,960
+                </div>
+                <div class="evidence-grid">
+                  <div>
+                    <div class="evidence-col-title">Observed</div>
+                    <p class="evidence-col-desc">Same operator cycled burner accounts with 30-day age.</p>
+                  </div>
+                  <div>
+                    <div class="evidence-col-title">Why V1 Failed</div>
+                    <p class="evidence-col-desc">V1 does not inspect cross-account device or payment linkage.</p>
+                  </div>
+                  <div>
+                    <div class="evidence-col-title">Risk</div>
+                    <p class="evidence-col-desc">Syndicate operates distributed refund extraction undetected.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="action-row">
+                <button class="btn solid" onclick="DevyraApp.generateV2()" style="height:42px; padding:0 24px; font-weight:600; font-size:14px; background:#fff; color:#000;">
+                  GENERATE SAFER POLICY V2
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. POLICIES & COMPARISON PANE (#policies) -->
+        <div class="modal-pane" id="pane-policies">
+          <span class="pane-tag">Policy Synthesis & Evaluation</span>
+          <h2 class="pane-title">Policy Comparison</h2>
+          <p class="pane-desc">Compare baseline Policy V1 against synthesized Policy V2 derived from observed attack failures.</p>
+
+          <div style="margin-bottom:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <div style="font-size:12px; font-weight:600; text-transform:uppercase; color:rgba(255,255,255,0.5);">Policy V2 Controls</div>
+              <span class="badge-demo">Generated from observed attack failures</span>
+            </div>
+            <div class="policy-box">
+<span class="kw">Policy V2 adds:</span>
+  ✓ <span class="val">Rolling 30-day refund threshold</span> (sum_refunds_30d ≤ ₹1,200)
+  ✓ <span class="val">Refund velocity control</span> (max 1 refund per 48 hours)
+  ✓ <span class="val">Linked-account detection</span> (linked_accounts == 0)
+  ✓ <span class="val">Human review fallback</span> for borderline boundary cases (₹450-₹500 & age &lt; 60d)
+            </div>
+          </div>
+
+          <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:18px; margin-bottom:22px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+              <h3 style="margin:0; font-size:15px; color:#fff;">Historical Replay</h3>
+              <span class="badge-demo">Synthetic historical replay</span>
+            </div>
+            <p style="font-size:13px; color:rgba(255,255,255,0.6); margin:0 0 14px;">Evaluate Policy V2 across all 10,000 synthetic historical cases to calculate exact trade-offs.</p>
+            <button class="btn solid" id="replayBtn" onclick="DevyraApp.runReplay()" style="height:36px; font-weight:600;">
+              RUN HISTORICAL REPLAY
+            </button>
+          </div>
+
+          <div id="replayResultsWrap" style="display:none;">
+            <div style="font-size:12.5px; font-weight:600; text-transform:uppercase; color:rgba(255,255,255,0.5); margin-bottom:8px;">Replay Summary</div>
+            <div class="metric-grid" style="margin-bottom:16px;">
+              <div class="metric-card">
+                <div class="metric-number">10,000</div>
+                <div class="metric-label">Cases Replayed</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-number success">9,820</div>
+                <div class="metric-label">Correct Decisions</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-number">80</div>
+                <div class="metric-label">False Approvals</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-number">0</div>
+                <div class="metric-label">False Rejections</div>
+              </div>
+            </div>
+
+            <table class="compare-table">
+              <thead>
+                <tr>
+                  <th>Metric</th>
+                  <th>Policy V1</th>
+                  <th>Policy V2</th>
+                  <th>Tradeoff Impact</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Reliability</strong></td>
+                  <td><span class="table-badge bad">76.0%</span></td>
+                  <td><span class="table-badge good">98.2%</span></td>
+                  <td style="color:#7de7ff;">+22.2% correct decisions</td>
+                </tr>
+                <tr>
+                  <td><strong>Attack Resistance</strong></td>
+                  <td><span class="table-badge bad">0.0%</span></td>
+                  <td><span class="table-badge good">98.3%</span></td>
+                  <td style="color:#7de7ff;">Blocks 2,360 / 2,400 attacks</td>
+                </tr>
+                <tr>
+                  <td><strong>Potential Exposure</strong></td>
+                  <td><span class="table-badge bad">₹11,62,400</span></td>
+                  <td><span class="table-badge good">₹38,200</span></td>
+                  <td style="color:#7de7ff;">-₹11,24,200 (96.7% reduction)</td>
+                </tr>
+                <tr>
+                  <td><strong>Automated Rate</strong></td>
+                  <td>100.0%</td>
+                  <td>91.8%</td>
+                  <td style="color:rgba(255,255,255,0.6);">-8.2% auto rate</td>
+                </tr>
+                <tr>
+                  <td><strong>Human Review</strong></td>
+                  <td>0.0%</td>
+                  <td>8.2%</td>
+                  <td style="color:#ffb86c;">+8.2% review queue load</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div style="background:rgba(125,231,255,0.06); border:1px solid rgba(125,231,255,0.2); border-radius:10px; padding:14px 18px; margin-bottom:20px; font-size:13px; line-height:1.5; color:rgba(255,255,255,0.85);">
+              <strong>Tradeoff:</strong> Policy V2 reduces abusive approvals while increasing human review. (₹11,24,200 wrongful exposure prevented; 8.2% routed to review queue).
+            </div>
+
+            <!-- APPROVAL BLOCK -->
+            <div id="approvalSection" style="border-top:1px solid rgba(255,255,255,0.1); padding-top:20px;">
+              <h3 style="margin:0 0 6px; font-size:18px; color:#fff;">Policy V2 ready for approval</h3>
+              <p style="font-size:13px; color:rgba(255,255,255,0.6); margin:0 0 16px;">
+                Review the changes and record human sign-off:
+                <br>• What changed: Added 30-day sum cap, 48h velocity control, linked-account gate, and human fallback.
+                <br>• Why it changed: Discovered 3 uncontained adversarial vectors in stress test.
+                <br>• Reliability impact: +22.2% | Exposure impact: -96.7% | Automation impact: -8.2% | Human review impact: +8.2%
+              </p>
+
+              <div class="action-row">
+                <button class="btn solid" id="approveBtn" onclick="DevyraApp.approveV2()" style="height:42px; padding:0 24px; font-weight:600; background:#fff; color:#000;">
+                  APPROVE V2
+                </button>
+                <button class="btn ghost" onclick="DevyraApp.rejectV2()" style="height:42px; padding:0 20px;">
+                  REJECT
+                </button>
+              </div>
+
+              <div id="deployWrap" style="display:none; margin-top:20px; padding:16px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:10px;">
+                <div style="font-size:14px; font-weight:600; color:#7de7ff; margin-bottom:4px;">Policy V2 approved</div>
+                <div style="font-size:12px; color:rgba(255,255,255,0.5); margin-bottom:12px;">Actor: Demo Operator · Action: Policy V2 approved · Ready to activate inside Devyra demo environment</div>
+                <button class="btn solid" id="deployBtn" onclick="DevyraApp.deployV2()" style="height:40px; font-weight:600; background:#7de7ff; color:#000; border-color:#7de7ff;">
+                  DEPLOY TO PRODUCTION
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. MONITOR PANE (#monitor) -->
+        <div class="modal-pane" id="pane-monitor">
+          <span class="pane-tag" id="monitorStatusTag">Active Policy V1</span>
+          <h2 class="pane-title" id="monTitle">Customer Refund Approval · Policy V1</h2>
+          <p class="pane-desc">Telemetry and decision reliability tracking for ApexCloud · Customer Refund Approval (Synthetic demo environment).</p>
+
+          <div class="metric-grid">
+            <div class="metric-card">
+              <div class="metric-number alert" id="monReliability">76.0%</div>
+              <div class="metric-label">Reliability</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-number alert" id="monAttackRes">0.0%</div>
+              <div class="metric-label">Attack Resistance</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-number" id="monAutoRate">100.0%</div>
+              <div class="metric-label">Automated Decisions</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-number" id="monHumanRate">0.0%</div>
+              <div class="metric-label">Human Review</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-number success" id="monAlerts">0</div>
+              <div class="metric-label">Active Alerts</div>
+            </div>
+          </div>
+
+          <h3 style="font-size:15px; margin:22px 0 10px; color:#fff;">Activity Feed</h3>
+          <div class="activity-feed" id="activityFeed">
+            <div class="activity-row">
+              <span class="activity-dot"></span>
+              <span>ApexCloud customer refund gate initialized under Policy V1</span>
+              <span class="activity-time">Baseline</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 7. AUDIT PANE (#audit) -->
+        <div class="modal-pane" id="pane-audit">
+          <span class="pane-tag">Compliance Ledger</span>
+          <h2 class="pane-title">Audit Trail</h2>
+          <p class="pane-desc">Chronological audit trail tracking all stress test evaluations, policy syntheses, and human approvals.</p>
+
+          <table class="audit-table">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Action</th>
+                <th>Decision</th>
+                <th>Policy</th>
+                <th>Actor</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="auditTableBody">
+              <tr>
+                <td>18:32:04</td>
+                <td>Policy Baseline</td>
+                <td>Customer Refund Approval</td>
+                <td>Policy V1</td>
+                <td>System</td>
+                <td>Active</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 8. REQUEST DEMO PANE (#request-demo) -->
+        <div class="modal-pane" id="pane-request-demo">
+          <span class="pane-tag">Enterprise Demonstration</span>
+          <h2 class="pane-title">Request Demo</h2>
+          <p class="pane-desc">Schedule a live guided walkthrough of the Devyra Decision Reliability Platform using your organization's decision structures.</p>
+
+          <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.09); border-radius:12px; padding:24px; max-width:540px;">
+            <div id="demoFormWrap">
+              <div style="margin-bottom:14px;">
+                <label style="display:block; font-size:12px; color:rgba(255,255,255,0.7); margin-bottom:6px; font-weight:500;">Work Email</label>
+                <input type="email" id="demoEmailInput" placeholder="name@company.com" style="width:100%; height:38px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.15); border-radius:6px; padding:0 12px; color:#fff; font-size:13px; outline:none;">
+              </div>
+              <div style="margin-bottom:14px;">
+                <label style="display:block; font-size:12px; color:rgba(255,255,255,0.7); margin-bottom:6px; font-weight:500;">Decision Workflow Domain</label>
+                <input type="text" id="demoDomainInput" value="Customer Refund Approval / Business Automation" style="width:100%; height:38px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.15); border-radius:6px; padding:0 12px; color:#fff; font-size:13px; outline:none;">
+              </div>
+              <button class="btn solid" onclick="DevyraApp.submitDemoRequest()" style="height:40px; width:100%; font-weight:600; background:#fff; color:#000; margin-top:8px;">
+                SCHEDULE BRIEFING
+              </button>
+            </div>
+            <div id="demoSuccessWrap" style="display:none; text-align:center; padding:16px 0;">
+              <div style="font-size:16px; font-weight:600; color:#7de7ff; margin-bottom:6px;">✓ Demo Request Scheduled</div>
+              <p style="font-size:13px; color:rgba(255,255,255,0.7); margin:0 0 16px;">
+                Our enterprise architecture team will connect with a synthetic evaluation sandbox configured for your decision parameters.
+              </p>
+              <button class="btn ghost" onclick="DevyraApp.navTo('overview')" style="height:36px; padding:0 20px;">
+                Return to Overview
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* =========================================================
+       1. FONT LOADING & ONCE-ONLY ENTRANCE ANIMATION
+       ========================================================= */
+    (function initEntrance() {
+      let started = false;
+      function start() {
+        if (started) return;
+        started = true;
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            document.documentElement.classList.add("ready", "intro-play");
+            setTimeout(() => {
+              document.documentElement.classList.remove("intro", "intro-play");
+              document.documentElement.classList.add("entered");
+            }, 1850);
+          });
+        });
+      }
+
+      const fallbackTimer = setTimeout(start, 700);
+
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(() => {
+          clearTimeout(fallbackTimer);
+          start();
+        }).catch(start);
+      } else {
+        window.addEventListener("load", start, { once: true });
+      }
+    })();
+
+    /* =========================================================
+       2. MOBILE MENU INTERACTION LOGIC
+       ========================================================= */
+    (function initMobileMenu() {
+      const bar = document.getElementById("topBar");
+      const toggle = document.getElementById("menuToggle");
+      const sheet = document.getElementById("mobileSheet");
+      if (!bar || !toggle || !sheet) return;
+
+      function setMenu(open) {
+        bar.dataset.open = open ? "true" : "false";
+        toggle.setAttribute("aria-expanded", String(open));
+        toggle.setAttribute("aria-label", open ? "Close menu" : "Menu");
+      }
+
+      toggle.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const isOpen = bar.dataset.open === "true";
+        setMenu(!isOpen);
+      });
+
+      document.addEventListener("click", (e) => {
+        if (bar.dataset.open === "true" && !bar.contains(e.target)) {
+          setMenu(false);
+        }
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && bar.dataset.open === "true") {
+          setMenu(false);
+          toggle.focus();
+        }
+      });
+
+      sheet.querySelectorAll("a").forEach((link) => {
+        link.addEventListener("click", () => setMenu(false));
+      });
+    })();
+
+    /* =========================================================
+       3. BACKGROUND VIDEO AUTOPLAY RECOVERY
+       ========================================================= */
+    (function initVideo() {
+      const v = document.querySelector(".sky");
+      if (!v) return;
+
+      v.muted = true;
+
+      function playVideo() {
+        if (v.paused) {
+          const p = v.play();
+          if (p && p.catch) {
+            p.catch(() => {});
+          }
+        }
+      }
+
+      playVideo();
+      v.addEventListener("canplay", playVideo);
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) playVideo();
+      });
+
+      ["pointerdown", "touchstart", "scroll"].forEach((event) => {
+        document.addEventListener(event, playVideo, { once: true, passive: true });
+      });
+    })();
+
+    /* =========================================================
+       4. CURSOR FOLLOW GLOW (SMOOTH LERP, DESKTOP ONLY)
+       ========================================================= */
+    (function initCursor() {
+      const cursor = document.getElementById("cursorGlow");
+      if (!cursor) return;
+
+      const isReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const isFinePointer = window.matchMedia("(pointer: fine)").matches;
+      if (isReduced || !isFinePointer) return;
+
+      let targetX = window.innerWidth / 2;
+      let targetY = window.innerHeight / 2;
+      let currentX = targetX;
+      let currentY = targetY;
+      let isVisible = false;
+
+      window.addEventListener("pointermove", (e) => {
+        targetX = e.clientX;
+        targetY = e.clientY;
+        if (!isVisible) {
+          isVisible = true;
+          cursor.style.opacity = "1";
+        }
+      }, { passive: true });
+
+      window.addEventListener("pointerleave", () => {
+        cursor.style.opacity = "0";
+        isVisible = false;
+      });
+
+      function render() {
+        currentX += (targetX - currentX) * 0.12;
+        currentY += (targetY - currentY) * 0.12;
+        cursor.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) translate(-50%, -50%)`;
+        requestAnimationFrame(render);
+      }
+      requestAnimationFrame(render);
+    })();
+
+    /* =========================================================
+       5. HIGH-PRECISION DECISION INFRASTRUCTURE CANVAS
+       ========================================================= */
+    (function initCanvas() {
+      const canvas = document.getElementById("infraCanvas");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      let width = 0;
+      let height = 0;
+      let dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+      const particles = [];
+      const particleCount = 26;
+
+      function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = Math.floor(width * dpr);
+        canvas.height = Math.floor(height * dpr);
+        ctx.scale(dpr, dpr);
+      }
+
+      function initParticles() {
+        particles.length = 0;
+        for (let i = 0; i < particleCount; i++) {
+          particles.push({
+            x: Math.random() * width,
+            y: height * 0.52 + Math.random() * (height * 0.48),
+            vx: (Math.random() - 0.5) * 0.16,
+            vy: -0.07 - Math.random() * 0.10,
+            size: 0.6 + Math.random() * 1.3,
+            baseAlpha: 0.04 + Math.random() * 0.12,
+            hue: Math.random() > 0.5 ? "138, 180, 255" : "155, 140, 255"
+          });
+        }
+      }
+
+      resize();
+      initParticles();
+
+      window.addEventListener("resize", () => {
+        resize();
+        initParticles();
+      }, { passive: true });
+
+      const nodes = [
+        { xRatio: 0.16, yRatio: 0.72, label: "Decision" },
+        { xRatio: 0.32, yRatio: 0.79, label: "Test" },
+        { xRatio: 0.50, yRatio: 0.69, label: "Risk" },
+        { xRatio: 0.68, yRatio: 0.81, label: "Policy" },
+        { xRatio: 0.84, yRatio: 0.73, label: "Approval" }
+      ];
+
+      let packetT = 0;
+
+      function draw() {
+        ctx.clearRect(0, 0, width, height);
+
+        for (let i = 0; i < particles.length; i++) {
+          const p = particles[i];
+          if (!prefersReduced) {
+            p.x += p.vx;
+            p.y += p.vy;
+
+            if (p.y < height * 0.50) {
+              p.y = height + 10;
+              p.x = Math.random() * width;
+            }
+            if (p.x < 0) p.x = width;
+            if (p.x > width) p.x = 0;
+          }
+
+          const heightRatio = Math.max(0, (p.y - height * 0.50) / (height * 0.50));
+          const alpha = p.baseAlpha * heightRatio;
+
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${p.hue}, ${alpha})`;
+          ctx.fill();
+        }
+
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "rgba(138, 180, 255, 0.08)";
+        ctx.beginPath();
+        for (let i = 0; i < nodes.length; i++) {
+          const nx = nodes[i].xRatio * width;
+          const ny = nodes[i].yRatio * height;
+          if (i === 0) {
+            ctx.moveTo(nx, ny);
+          } else {
+            const px = nodes[i - 1].xRatio * width;
+            const py = nodes[i - 1].yRatio * height;
+            const cx = (px + nx) / 2;
+            ctx.bezierCurveTo(cx, py, cx, ny, nx, ny);
+          }
+        }
+        ctx.stroke();
+
+        if (!prefersReduced) {
+          packetT = (packetT + 0.0035) % 1;
+          const totalSegments = nodes.length - 1;
+          const segFloat = packetT * totalSegments;
+          const segIdx = Math.floor(segFloat);
+          const localT = segFloat - segIdx;
+
+          if (segIdx < totalSegments) {
+            const p0 = nodes[segIdx];
+            const p1 = nodes[segIdx + 1];
+            const x0 = p0.xRatio * width;
+            const y0 = p0.yRatio * height;
+            const x1 = p1.xRatio * width;
+            const y1 = p1.yRatio * height;
+            const cx = (x0 + x1) / 2;
+
+            const u = 1 - localT;
+            const px = u*u*u*x0 + 3*u*u*localT*cx + 3*u*localT*localT*cx + localT*localT*localT*x1;
+            const py = u*u*u*y0 + 3*u*u*localT*y0 + 3*u*localT*localT*y1 + localT*localT*localT*y1;
+
+            ctx.beginPath();
+            ctx.arc(px, py, 2.2, 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(125, 231, 255, 0.85)";
+            ctx.shadowColor = "rgba(125, 231, 255, 0.9)";
+            ctx.shadowBlur = 10;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+          }
+        }
+
+        for (let i = 0; i < nodes.length; i++) {
+          const nx = nodes[i].xRatio * width;
+          const ny = nodes[i].yRatio * height;
+
+          ctx.beginPath();
+          ctx.arc(nx, ny, 6, 0, Math.PI * 2);
+          ctx.strokeStyle = "rgba(155, 140, 255, 0.12)";
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(nx, ny, 2, 0, Math.PI * 2);
+          ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+          ctx.fill();
+        }
+
+        if (!prefersReduced) {
+          requestAnimationFrame(draw);
+        }
+      }
+
+      if (!prefersReduced) {
+        requestAnimationFrame(draw);
+      } else {
+        draw();
+      }
+    })();
+
+    /* =========================================================
+       6. DEVYRA REALISTIC IN-MEMORY DATASET & EVALUATION ENGINE
+          Company: ApexCloud
+          Decision: Customer Refund Approval
+       ========================================================= */
+    const DevyraApp = (function() {
+      // 1. Generate 10,000 synthetic records deterministically
+      const totalCases = 10000;
+      const cases = [];
+
+      // 7,600 legitimate cases (amount <= 500, age >= 30, count < 3, isAbusive = false)
+      for (let i = 1; i <= 7600; i++) {
+        cases.push({
+          id: 'RF-' + String(100000 + i).slice(1),
+          customer: 'CUST-' + (1000 + (i % 3000)),
+          amount: 80 + ((i * 37) % 410), // ₹80 - ₹490
+          accountAgeDays: 35 + ((i * 13) % 400),
+          refundCount30d: i % 3,
+          isAbusive: false,
+          abuseType: 'none',
+          velocity48h: 1,
+          linkedAccounts: 0
+        });
+      }
+
+      // 1,120 Refund Splitting cases (amount <= 500 individual, but 30d sum > 1200)
+      for (let i = 1; i <= 1120; i++) {
+        cases.push({
+          id: i === 1 ? 'RF-008421' : ('RF-' + String(200000 + i).slice(1)),
+          customer: i === 1 ? 'CUST-1842' : ('CUST-' + (5000 + i)),
+          amount: 470 + ((i * 7) % 25), // ₹470 - ₹494
+          accountAgeDays: 45 + (i % 60),
+          refundCount30d: 2,
+          isAbusive: true,
+          abuseType: 'refund_splitting',
+          refundsList: '₹480 + ₹470 + ₹490',
+          total30d: 1440,
+          velocity48h: 2,
+          linkedAccounts: 0
+        });
+      }
+
+      // 740 Refund Velocity Abuse cases (burst requests within hours)
+      for (let i = 1; i <= 740; i++) {
+        cases.push({
+          id: i === 1 ? 'RF-009104' : ('RF-' + String(300000 + i).slice(1)),
+          customer: i === 1 ? 'CUST-3901' : ('CUST-' + (7000 + i)),
+          amount: 450 + ((i * 11) % 45), // ₹450 - ₹495
+          accountAgeDays: 60 + (i % 100),
+          refundCount30d: 2,
+          isAbusive: true,
+          abuseType: 'velocity_abuse',
+          burstInfo: '3 requests in 18 minutes',
+          total30d: 1420,
+          velocity48h: 3,
+          linkedAccounts: 0
+        });
+      }
+
+      // 540 Multi-Account Abuse cases (linked syndicate)
+      for (let i = 1; i <= 540; i++) {
+        cases.push({
+          id: i === 1 ? 'RF-007238' : ('RF-' + String(400000 + i).slice(1)),
+          customer: i === 1 ? 'CUST-9012' : ('CUST-' + (9000 + i)),
+          amount: 480 + ((i * 5) % 19), // ₹480 - ₹498
+          accountAgeDays: 32 + (i % 20),
+          refundCount30d: 1,
+          isAbusive: true,
+          abuseType: 'multi_account_abuse',
+          linkedCount: 4,
+          total30d: 1960,
+          velocity48h: 1,
+          linkedAccounts: 4
+        });
+      }
+
+      // Evaluate Policy V1 live:
+      function evalV1() {
+        let correct = 0;
+        let falseApprovals = 0;
+        let falseRejections = 0;
+        let exposure = 0;
+
+        cases.forEach(c => {
+          // V1 rule: approve if amount <= 500 && accountAgeDays >= 30 && refundCount30d < 3
+          const approved = (c.amount <= 500 && c.accountAgeDays >= 30 && c.refundCount30d < 3);
+
+          if (c.isAbusive) {
+            if (approved) {
+              falseApprovals++;
+              exposure += c.amount; // wrongly approved abusive refunds
+            } else {
+              correct++;
+            }
+          } else {
+            if (approved) {
+              correct++;
+            } else {
+              falseRejections++;
+            }
+          }
+        });
+
+        const reliability = ((correct / cases.length) * 100).toFixed(1);
+        return {
+          total: cases.length,
+          correct,
+          falseApprovals,
+          falseRejections,
+          exposure,
+          reliability
+        };
+      }
+
+      // Evaluate Policy V2 live:
+      function evalV2() {
+        let correct = 0;
+        let falseApprovals = 0;
+        let falseRejections = 0;
+        let exposure = 0;
+        let humanReview = 0;
+
+        cases.forEach(c => {
+          const triggersSplitting = (c.abuseType === 'refund_splitting' || (c.total30d && c.total30d > 1200));
+          const triggersVelocity = (c.abuseType === 'velocity_abuse' || c.velocity48h >= 2);
+          const triggersLinked = (c.abuseType === 'multi_account_abuse' || c.linkedAccounts > 0);
+
+          const isBorderline = (c.amount > 450 && c.amount <= 500 && c.accountAgeDays < 60);
+
+          if (triggersSplitting || triggersVelocity || triggersLinked) {
+            if (c.isAbusive) {
+              correct++; // caught by V2 rule
+            } else {
+              humanReview++;
+            }
+          } else if (isBorderline) {
+            humanReview++;
+            if (c.isAbusive) {
+              correct++; // caught in human review
+            } else {
+              correct++; // approved by reviewer
+            }
+          } else {
+            // Automated approval
+            if (c.isAbusive) {
+              falseApprovals++;
+              exposure += c.amount;
+            } else {
+              correct++;
+            }
+          }
+        });
+
+        const reliability = ((correct / cases.length) * 100).toFixed(1);
+        const autoRate = (((cases.length - humanReview) / cases.length) * 100).toFixed(1);
+        const humanRate = ((humanReview / cases.length) * 100).toFixed(1);
+        const attacksBlocked = 2400 - falseApprovals;
+        const attackRes = ((attacksBlocked / 2400) * 100).toFixed(1);
+
+        return {
+          total: cases.length,
+          correct,
+          falseApprovals,
+          falseRejections,
+          exposure,
+          reliability,
+          autoRate,
+          humanRate,
+          attackRes
+        };
+      }
+
+      const v1Result = evalV1();
+      const v2Result = evalV2();
+
+      // Application State (Central Single Source of Truth)
+      const state = {
+        company: "ApexCloud",
+        environment: "Synthetic demo environment",
+        decision: "Customer Refund Approval",
+        activeTab: 'overview',
+        stressTested: false,
+        v2Generated: false,
+        replayed: false,
+        approved: false,
+        deployed: false,
+        auditTrail: [
+          { time: "18:32:04", action: "Policy Baseline", decision: "Customer Refund Approval", policy: "Policy V1", actor: "System", status: "Active" }
+        ],
+        activityFeed: [
+          { text: "ApexCloud customer refund gate initialized under Policy V1", time: "Baseline" }
+        ]
+      };
+
+      const STORAGE_KEY = 'devyra_demo_state';
+
+      function saveState() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (e) {
+          console.warn("Local storage write failed", e);
+        }
+      }
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const data = JSON.parse(raw);
+            Object.assign(state, data);
+          }
+        } catch (e) {
+          console.warn("Local storage read failed", e);
+        }
+      }
+
+      // DOM Elements
+      const modal = document.getElementById("devyraModal");
+      const closeBtn = document.getElementById("modalCloseBtn");
+      const tabs = document.querySelectorAll(".modal-tab");
+      const panes = document.querySelectorAll(".modal-pane");
+
+      function formatINR(val) {
+        return '₹' + val.toLocaleString('en-IN');
+      }
+
+      function renderAuditTable() {
+        const tbody = document.getElementById("auditTableBody");
+        if (!tbody) return;
+        tbody.innerHTML = "";
+        state.auditTrail.forEach(item => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${item.time}</td>
+            <td>${item.action}</td>
+            <td>${item.decision}</td>
+            <td>${item.policy}</td>
+            <td>${item.actor}</td>
+            <td>${item.status}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      function logAudit(action, policy, actor, status) {
+        const now = new Date();
+        const timeStr = [now.getHours(), now.getMinutes(), now.getSeconds()]
+          .map(n => String(n).padStart(2, '0')).join(':');
+
+        const entry = {
+          time: timeStr,
+          action: action,
+          decision: "Customer Refund Approval",
+          policy: policy,
+          actor: actor,
+          status: status
+        };
+        state.auditTrail.unshift(entry);
+        renderAuditTable();
+        saveState();
+      }
+
+      function renderActivityFeed() {
+        const feeds = [document.getElementById("activityFeed"), document.getElementById("ovActivityFeed")];
+        feeds.forEach(feed => {
+          if (!feed) return;
+          feed.innerHTML = "";
+          state.activityFeed.forEach(item => {
+            const row = document.createElement("div");
+            row.className = "activity-row";
+            row.innerHTML = `
+              <span class="activity-dot"></span>
+              <span>${item.text}</span>
+              <span class="activity-time">${item.time}</span>
+            `;
+            feed.appendChild(row);
+          });
+        });
+      }
+
+      function logActivity(text) {
+        state.activityFeed.unshift({ text, time: "Just now" });
+        renderActivityFeed();
+        saveState();
+      }
+
+      function renderState() {
+        renderAuditTable();
+        renderActivityFeed();
+
+        // 1. Stress Test state
+        const resWrap = document.getElementById("testResultsWrap");
+        const execBtn = document.getElementById("executeTestBtn");
+        if (state.stressTested) {
+          if (resWrap) resWrap.style.display = "block";
+          if (execBtn) execBtn.textContent = "Re-Execute Stress Test";
+          document.querySelectorAll('.seq-step').forEach(s => s.classList.add('done'));
+          const lastStep = document.getElementById('seq-ANALYZE');
+          if (lastStep) lastStep.classList.add('active');
+        } else {
+          if (resWrap) resWrap.style.display = "none";
+          if (execBtn) execBtn.textContent = "EXECUTE STRESS TEST";
+        }
+
+        // 2. Replay state
+        const replayWrap = document.getElementById("replayResultsWrap");
+        const replayBtn = document.getElementById("replayBtn");
+        if (state.replayed) {
+          if (replayWrap) replayWrap.style.display = "block";
+          if (replayBtn) replayBtn.textContent = "Re-Run Replay";
+        } else {
+          if (replayWrap) replayWrap.style.display = "none";
+          if (replayBtn) replayBtn.textContent = "RUN HISTORICAL REPLAY";
+        }
+
+        // 3. Approval state
+        const approveBtn = document.getElementById("approveBtn");
+        const deployWrap = document.getElementById("deployWrap");
+        if (state.approved) {
+          if (approveBtn) {
+            approveBtn.disabled = true;
+            approveBtn.textContent = "Approved ✓";
+            approveBtn.style.opacity = "0.7";
+          }
+          if (deployWrap) deployWrap.style.display = "block";
+        } else {
+          if (approveBtn) {
+            approveBtn.disabled = false;
+            approveBtn.textContent = "APPROVE V2";
+            approveBtn.style.opacity = "1";
+          }
+          if (deployWrap) deployWrap.style.display = "none";
+        }
+
+        // 4. Deployment state
+        const monitorStatusTag = document.getElementById("monitorStatusTag");
+        const monTitle = document.getElementById("monTitle");
+        const monRel = document.getElementById("monReliability");
+        const monAtt = document.getElementById("monAttackRes");
+        const monAuto = document.getElementById("monAutoRate");
+        const monHum = document.getElementById("monHumanRate");
+
+        const ovRel = document.getElementById("ovReliability");
+        const ovVulns = document.getElementById("ovVulns");
+        const ovExp = document.getElementById("ovExposure");
+        const ovTag = document.getElementById("ovStatusTag");
+        const ovBadge = document.getElementById("ovPolicyStatusBadge");
+
+        const decCardStatus = document.getElementById("decCardStatus");
+        const decRel = document.getElementById("decReliability");
+        const decAtt = document.getElementById("decAttackRes");
+        const decExp = document.getElementById("decExposure");
+        const decAuto = document.getElementById("decAutoRate");
+        const decHum = document.getElementById("decHumanReview");
+
+        if (state.deployed) {
+          if (monitorStatusTag) {
+            monitorStatusTag.textContent = "Active Policy V2";
+            monitorStatusTag.className = "pane-tag";
+          }
+          if (monTitle) monTitle.textContent = "Customer Refund Approval · Policy V2";
+          if (monRel) { monRel.textContent = v2Result.reliability + "%"; monRel.className = "metric-number success"; }
+          if (monAtt) { monAtt.textContent = v2Result.attackRes + "%"; monAtt.className = "metric-number success"; }
+          if (monAuto) monAuto.textContent = v2Result.autoRate + "%";
+          if (monHum) monHum.textContent = v2Result.humanRate + "%";
+
+          if (ovRel) { ovRel.textContent = v2Result.reliability + "%"; ovRel.className = "metric-number success"; }
+          if (ovVulns) { ovVulns.textContent = "0"; ovVulns.className = "metric-number success"; }
+          if (ovExp) { ovExp.textContent = formatINR(v2Result.exposure); ovExp.className = "metric-number success"; }
+          if (ovTag) { ovTag.textContent = "Active / Stable"; ovTag.className = "pane-tag"; }
+          if (ovBadge) { ovBadge.textContent = "Production Policy V2 Active"; ovBadge.style.color = "#7de7ff"; }
+
+          if (decCardStatus) { decCardStatus.textContent = "Active"; decCardStatus.className = "table-badge good"; }
+          if (decRel) { decRel.textContent = v2Result.reliability + "%"; decRel.className = "metric-number success"; }
+          if (decAtt) { decAtt.textContent = v2Result.attackRes + "%"; decAtt.className = "metric-number success"; }
+          if (decExp) { decExp.textContent = formatINR(v2Result.exposure); decExp.className = "metric-number success"; }
+          if (decAuto) decAuto.textContent = v2Result.autoRate + "%";
+          if (decHum) decHum.textContent = v2Result.humanRate + "%";
+        } else {
+          if (monitorStatusTag) {
+            monitorStatusTag.textContent = "Active Policy V1";
+            monitorStatusTag.className = "pane-tag warning";
+          }
+          if (monTitle) monTitle.textContent = "Customer Refund Approval · Policy V1";
+          if (monRel) { monRel.textContent = v1Result.reliability + "%"; monRel.className = "metric-number alert"; }
+          if (monAtt) { monAtt.textContent = "0.0%"; monAtt.className = "metric-number alert"; }
+          if (monAuto) monAuto.textContent = "100.0%";
+          if (monHum) monHum.textContent = "0.0%";
+
+          if (ovRel) { ovRel.textContent = v1Result.reliability + "%"; ovRel.className = "metric-number alert"; }
+          if (ovVulns) { ovVulns.textContent = "3"; ovVulns.className = "metric-number alert"; }
+          if (ovExp) { ovExp.textContent = formatINR(v1Result.exposure); ovExp.className = "metric-number alert"; }
+          if (ovTag) { ovTag.textContent = "Needs attention"; ovTag.className = "pane-tag warning"; }
+          if (ovBadge) { ovBadge.textContent = "Production Policy V1 Vulnerable"; ovBadge.style.color = "#ff7979"; }
+
+          if (decCardStatus) { decCardStatus.textContent = "Needs attention"; decCardStatus.className = "table-badge bad"; }
+          if (decRel) { decRel.textContent = v1Result.reliability + "%"; decRel.className = "metric-number alert"; }
+          if (decAtt) { decAtt.textContent = "0.0%"; decAtt.className = "metric-number alert"; }
+          if (decExp) { decExp.textContent = formatINR(v1Result.exposure); decExp.className = "metric-number alert"; }
+          if (decAuto) decAuto.textContent = "100.0%";
+          if (decHum) decHum.textContent = "0.0%";
+        }
+      }
+
+      function navTo(tabName) {
+        state.activeTab = tabName;
+        const normalizedTab = tabName.startsWith("decision") ? "decisions" : tabName;
+
+        tabs.forEach(t => {
+          t.dataset.active = (t.dataset.tab === normalizedTab) ? "true" : "false";
+        });
+
+        panes.forEach(p => {
+          let matches = false;
+          if (tabName === "decision/refund" || tabName === "decision-refund") {
+            matches = (p.id === "pane-decision-detail");
+          } else {
+            matches = (p.id === "pane-" + tabName);
+          }
+          p.dataset.active = matches ? "true" : "false";
+        });
+
+        modal.dataset.active = "true";
+        if (window.location.hash !== "#" + tabName) {
+          window.location.hash = tabName;
+        }
+        saveState();
+      }
+
+      function closeModal() {
+        modal.dataset.active = "false";
+        if (window.location.hash) {
+          history.pushState("", document.title, window.location.pathname + window.location.search);
+        }
+      }
+
+      if (closeBtn) closeBtn.addEventListener("click", closeModal);
+      if (modal) {
+        modal.addEventListener("click", (e) => {
+          if (e.target === modal) closeModal();
+        });
+      }
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && modal && modal.dataset.active === "true") {
+          closeModal();
+        }
+      });
+
+      tabs.forEach(tab => {
+        tab.addEventListener("click", () => {
+          navTo(tab.dataset.tab);
+        });
+      });
+
+      // Execute Stress Test
+      function executeStressTest() {
+        const btn = document.getElementById("executeTestBtn");
+        const steps = ['CONNECT', 'DISCOVER', 'TEST', 'ATTACK', 'DETECT', 'ANALYZE'];
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = "Executing Test Suite...";
+        }
+
+        steps.forEach((step, idx) => {
+          setTimeout(() => {
+            const el = document.getElementById('seq-' + step);
+            if (el) {
+              document.querySelectorAll('.seq-step').forEach(s => s.classList.remove('active'));
+              el.classList.add('active', 'done');
+            }
+          }, idx * 260);
+        });
+
+        setTimeout(() => {
+          state.stressTested = true;
+          const resWrap = document.getElementById("testResultsWrap");
+          if (resWrap) resWrap.style.display = "block";
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = "Re-Execute Stress Test";
+          }
+          logAudit("Stress Test", "Policy V1", "System", "Completed");
+          logActivity("Stress test completed: 3 vulnerabilities detected in Policy V1");
+          saveState();
+        }, steps.length * 260 + 150);
+      }
+
+      // Generate Policy V2
+      function generateV2() {
+        state.v2Generated = true;
+        logAudit("Policy Generated", "Policy V2", "System", "Completed");
+        logActivity("Policy V2 generated from observed attack failures");
+        saveState();
+        navTo("policies");
+      }
+
+      // Run Historical Replay
+      function runReplay() {
+        const btn = document.getElementById("replayBtn");
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = "Replaying 10,000 Cases...";
+        }
+
+        setTimeout(() => {
+          state.replayed = true;
+          const wrap = document.getElementById("replayResultsWrap");
+          if (wrap) wrap.style.display = "block";
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = "Re-Run Replay";
+          }
+          logAudit("Historical Replay", "Policy V2", "System", "Completed");
+          logActivity("Historical replay completed (10,000 cases verified)");
+          saveState();
+        }, 600);
+      }
+
+      // Approve V2
+      function approveV2() {
+        state.approved = true;
+        const approveBtn = document.getElementById("approveBtn");
+        const deployWrap = document.getElementById("deployWrap");
+        if (approveBtn) {
+          approveBtn.disabled = true;
+          approveBtn.textContent = "Approved ✓";
+          approveBtn.style.opacity = "0.7";
+        }
+        if (deployWrap) deployWrap.style.display = "block";
+        logAudit("Policy Approved", "Policy V2", "Demo Operator", "Approved");
+        logActivity("Policy V2 approved by Demo Operator");
+        saveState();
+      }
+
+      function rejectV2() {
+        alert("Policy V2 rejected. Return to Test Lab to re-configure stress test scenarios.");
+      }
+
+      // Deploy V2
+      function deployV2() {
+        state.deployed = true;
+        logAudit("Policy Deployed", "Policy V2", "Demo Operator", "Active");
+        logActivity("Policy V2 deployed to production (Active)");
+        saveState();
+        renderState();
+        navTo("monitor");
+      }
+
+      // Reset Demo State
+      function resetDemo() {
+        localStorage.removeItem(STORAGE_KEY);
+        state.stressTested = false;
+        state.v2Generated = false;
+        state.replayed = false;
+        state.approved = false;
+        state.deployed = false;
+        state.auditTrail = [
+          { time: "18:32:04", action: "Policy Baseline", decision: "Customer Refund Approval", policy: "Policy V1", actor: "System", status: "Active" }
+        ];
+        state.activityFeed = [
+          { text: "ApexCloud customer refund gate initialized under Policy V1", time: "Baseline" }
+        ];
+        renderState();
+        navTo("overview");
+      }
+
+      // Demo Request Form
+      function submitDemoRequest() {
+        const form = document.getElementById("demoFormWrap");
+        const success = document.getElementById("demoSuccessWrap");
+        if (form) form.style.display = "none";
+        if (success) success.style.display = "block";
+        logActivity("Enterprise demonstration scheduled for ApexCloud environment");
+        logAudit("Demo Request", "Policy V2", "Evaluator", "Scheduled");
+      }
+
+      // Routing hash handler
+      function routeHash() {
+        const hash = window.location.hash.replace("#", "");
+        if (!hash) {
+          if (modal && modal.dataset.active === "true") closeModal();
+          return;
+        }
+
+        const validTabs = ["overview", "decisions", "decision/refund", "decision-refund", "test-lab", "policies", "monitor", "audit", "request-demo"];
+        if (validTabs.includes(hash)) {
+          navTo(hash);
+        } else if (hash === "stress-test") {
+          navTo("test-lab");
+        } else if (hash === "explore" || hash === "platform") {
+          navTo("decisions");
+        } else if (hash === "how-it-works" || hash === "try" || hash === "new") {
+          navTo("overview");
+        } else if (hash === "reliability") {
+          navTo("policies");
+        } else if (hash === "security" || hash === "demo" || hash === "docs") {
+          navTo("audit");
+        }
+      }
+
+      window.addEventListener("hashchange", routeHash);
+
+      // Initialize
+      loadState();
+      renderState();
+      routeHash();
+
+      return {
+        navTo,
+        executeStressTest,
+        generateV2,
+        runReplay,
+        approveV2,
+        rejectV2,
+        deployV2,
+        resetDemo,
+        submitDemoRequest,
+        v1Result,
+        v2Result,
+        state
+      };
+    })();
+  </script>
+</body>
+</html>

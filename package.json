@@ -1,0 +1,19 @@
+{
+  "name": "devyra",
+  "version": "1.0.0",
+  "description": "Devyra — AI Decision Reliability Platform",
+  "private": true,
+  "scripts": {
+    "start": "python -m http.server 4173 --bind 127.0.0.1",
+    "api": "python -m uvicorn apps.api.main:app --host 127.0.0.1 --port 8000 --reload",
+    "test": "pytest tests/test_devyra.py -v"
+  },
+  "keywords": [
+    "ai-reliability",
+    "decision-intelligence",
+    "adversarial-testing",
+    "policy-verification"
+  ],
+  "author": "Devyra Team",
+  "license": "Proprietary"
+}
